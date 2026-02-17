@@ -1,0 +1,54 @@
+name: Automatización de Datos
+
+on:
+  schedule:
+    - cron: "0 23 * * *"   # Todos los días a las 20:00 de Argentina (23:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install yfinance pandas matplotlib numpy xlrd openpyxl pandas-datareader imf-reader
+
+      - name: Run script
+        run: python ejecutar_código.py
+
+      - name: Configurar git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Mover CSV a carpeta Automatización de Datos
+        run: |
+          mkdir -p "Automatización de Datos"
+          mv ADRs_Precios.csv \
+             ADRs_variacion_porcentual_diaria.csv \
+             Depósitos_tesoro_variación_diaria.csv \
+             Depósitos_tesoro.csv \
+             Principales_Tasas_de_Interés.csv \
+             Variación_RRII_Factores_Explicación.csv \
+             Variación_Acumulada_RRII_Factores_Explicación.csv \
+             Préstamos_pesos_sector_privado_en_millones_por_tipo.csv \
+             Préstamos_usd_sector_privado_en_millones_por_tipo.csv \
+             Préstamos_Depósitos_usd_sector_privado_en_millones.csv \
+             Depósitos_tesoro_variación_diaria_y_factores_de_explicación.csv \
+             "Automatización de Datos/" || echo "No hay archivos para mover"
+
+      - name: Guardar csv
+        run: |
+          git add "Automatización de Datos/"
+          git commit -m "Auto-update: resultados $(date +'%Y-%m-%d %H:%M')" || echo "No hay cambios"
+          git push
